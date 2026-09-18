@@ -1,0 +1,20 @@
+{
+  "name": "poc-k6-perf-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "baseUrl": "https://petstore.swagger.io/v2/pet",
+  "scripts": {
+    "test": "k6 run --summary-mode=full main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arthurboeck/poc-k6-perf-test.git"
+  },
+  "author": "Arthur Boeck",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@types/k6": "^2.0.0"
+  }
+}
