@@ -9,16 +9,18 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    container:
-      image: grafana/k6:latest
 
     steps:
       - name: Checkout do repositório
         uses: actions/checkout@v4
 
-      - name: Executar testes de performance
+      - name: Executar testes de performance (k6 oficial via Docker)
         run: |
-          k6 run --summary-export summary.json --out json=results.json main.js || true
+          docker run --rm \
+            -v "$(pwd):/src" \
+            -w /src \
+            grafana/k6:latest \
+            run --summary-export summary.json --out json=results.json main.js || true
 
       - name: Aneximar relatórios de teste
         if: always()
