@@ -1,0 +1,30 @@
+name: CI - Build e Test
+
+on:
+  push:
+    branches: [ '*' ]
+  pull_request:
+    branches: [ '*' ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    container:
+      image: grafana/k6:latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Executar testes de performance
+        run: |
+          k6 run --summary-export summary.json --out json=results.json main.js || true
+
+      - name: Aneximar relatórios de teste
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorios-teste
+          path: |
+            results.json
+            summary.json

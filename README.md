@@ -6,18 +6,36 @@ O objetivo é exercitar um conjunto pequeno de endpoints (`pet` e `store`) com c
 
 ## Pré-requisitos
 
-- [k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) instalado (o projeto foi validado com k6 v2.x)
+- [Docker](https://www.docker.com/) — usado para rodar o k6 via imagem oficial [`grafana/k6`](https://hub.docker.com/r/grafana/k6)
 - Node.js (opcional, apenas para tipos e `npm install`)
-
-```bash
-npm install
-```
 
 A dependência `@types/k6` existe só para autocomplete no editor. O k6 **não** usa o `node_modules` em runtime; as libs extras vêm da [jslib](https://jslib.k6.io).
 
 ## Como executar
 
+### Via Docker (imagem oficial `grafana/k6`)
+
 Suite completa (todos os cenários definidos em `main.js`):
+
+```bash
+docker run --rm \
+  -v "$(pwd):/src" \
+  -w /src \
+  grafana/k6:latest \
+  run main.js
+```
+
+Com relatórios:
+
+```bash
+docker run --rm \
+  -v "$(pwd):/src" \
+  -w /src \
+  grafana/k6:latest \
+  run --summary-export summary.json --out json=results.json main.js
+```
+
+### Via k6 instalado localmente
 
 ```bash
 k6 run main.js
@@ -66,6 +84,45 @@ Definidos em `main.js`:
 | `postOrder`    | `per-vu-iterations` | 3 VUs × 10 iterações (max 30s)       | `POST /store/order`         |
 
 A função `default` chama os quatro testes em sequência. Com vários cenários ativos, **cada VU de cada cenário executa essa mesma função** — os quatro requests rodam juntos, não um endpoint por cenário.
+
+## Integração Contínua (CI)
+
+O projeto possui um pipeline GitHub Actions em [`.github/workflows/ci.yml`](.github/workflows/ci.yml) que roda em todo `push` e `pull_request` na branch `main`.
+
+### O que o pipeline faz
+
+1. Faz checkout do repositório
+2. Instala Node.js 20 e as dependências (`npm ci`)
+3. Instala o k6 via repositório oficial apt
+4. Executa os testes de performance: `k6 run --summary-export summary.json --out json=results.json main.js`
+5. Anexa os relatórios como artifact `relatorios-teste` (disponível na aba **Actions → [run] → Artifacts**)
+
+### Relatórios gerados
+
+| Arquivo | Descrição |
+|---------|-----------|
+| `results.json` | Relatório detalhado em JSON (todos os dados brutos da execução) |
+| `summary.json` | Resumo agregado das métricas do k6 |
+
+Ambos estão no `.gitignore` e não são commitados — são gerados a cada run do CI e disponibilizados como artifact para download.
+
+### Executar localmente com relatórios
+
+Via Docker (imagem oficial `grafana/k6`):
+
+```bash
+docker run --rm \
+  -v "$(pwd):/src" \
+  -w /src \
+  grafana/k6:latest \
+  run --summary-export summary.json --out json=results.json main.js
+```
+
+Ou com k6 instalado localmente:
+
+```bash
+k6 run --summary-export summary.json --out json=results.json main.js
+```
 
 ## Asserções
 

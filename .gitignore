@@ -1,1 +1,5 @@
 node_modules/
+results.json
+summary.json
+dashboard.html
+k6-dashboard/
