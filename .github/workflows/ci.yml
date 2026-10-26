@@ -7,7 +7,24 @@ on:
     branches: [ '*' ]
 
 jobs:
-  build-and-test:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+  test:
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
@@ -30,3 +47,19 @@ jobs:
           path: |
             results.json
             summary.json
+
+  reports:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar relatórios de teste
+        uses: actions/download-artifact@v4
+        with:
+          name: relatorios-teste
+          path: relatorios/
+
+      - name: Listar relatórios disponíveis
+        run: |
+          echo "Relatórios gerados:"
+          ls -la relatorios/
