@@ -33,15 +33,16 @@ jobs:
       - name: Checkout do repositório
         uses: actions/checkout@v7
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
+      - name: Setup k6
+        uses: grafana/setup-k6-action@v1.2.2
 
-      - name: Executar testes
-        run: npm run test-report
+      - name: Run k6
+        uses: grafana/run-k6-action@v1.5.0
+        env:
+          K6_WEB_DASHBOARD: true
+          K6_WEB_DASHBOARD_EXPORT: html-report.html
+        with:
+          path: ./main.js
 
       - name: Upload Artefatos
         if: always()
