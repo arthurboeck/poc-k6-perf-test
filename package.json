@@ -5,7 +5,8 @@
   "main": "index.js",
   "baseUrl": "https://petstore.swagger.io/v2/pet",
   "scripts": {
-    "test": "k6 run --summary-mode=full main.js"
+    "test": "k6 run --summary-mode=full main.js",
+    "test-report": "K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=html-report.html npm run test"
   },
   "repository": {
     "type": "git",
