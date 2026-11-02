@@ -43,6 +43,7 @@ jobs:
           K6_WEB_DASHBOARD_EXPORT: html-report.html
         with:
           path: ./main.js
+          flags: --summary-mode=full
 
       - name: Upload Artefatos
         if: always()

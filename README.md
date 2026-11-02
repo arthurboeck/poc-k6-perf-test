@@ -6,36 +6,14 @@ O objetivo é exercitar um conjunto pequeno de endpoints (`pet` e `store`) com c
 
 ## Pré-requisitos
 
-- [Docker](https://www.docker.com/) — usado para rodar o k6 via imagem oficial [`grafana/k6`](https://hub.docker.com/r/grafana/k6)
-- Node.js (opcional, apenas para tipos e `npm install`)
+- Node.js 
+- Grafana/K6
 
 A dependência `@types/k6` existe só para autocomplete no editor. O k6 **não** usa o `node_modules` em runtime; as libs extras vêm da [jslib](https://jslib.k6.io).
 
 ## Como executar
 
-### Via Docker (imagem oficial `grafana/k6`)
-
 Suite completa (todos os cenários definidos em `main.js`):
-
-```bash
-docker run --rm \
-  -v "$(pwd):/src" \
-  -w /src \
-  grafana/k6:latest \
-  run main.js
-```
-
-Com relatórios:
-
-```bash
-docker run --rm \
-  -v "$(pwd):/src" \
-  -w /src \
-  grafana/k6:latest \
-  run --summary-export summary.json --out json=results.json main.js
-```
-
-### Via k6 instalado localmente
 
 ```bash
 k6 run main.js
@@ -87,41 +65,37 @@ A função `default` chama os quatro testes em sequência. Com vários cenários
 
 ## Integração Contínua (CI)
 
-O projeto possui um pipeline GitHub Actions em [`.github/workflows/ci.yml`](.github/workflows/ci.yml) que roda em todo `push` e `pull_request` na branch `main`.
+O projeto possui um pipeline GitHub Actions em [`.github/workflows/ci.yml`](.github/workflows/ci.yml) que roda em todo `push` e `pull_request` em qualquer branch.
+
+O pipeline é dividido em dois jobs:
+
+1. **`build`** — checkout do repositório, instala Node.js 20 e executa `npm ci`.
+2. **`test`** (depende de `build`) — checkout do repositório, instala o k6 via [`grafana/setup-k6-action`](https://github.com/grafana/setup-k6-action) e executa os testes com [`grafana/run-k6-action`](https://github.com/grafana/run-k6-action), gerando o dashboard HTML em `html-report.html` e anexando-o como artifact `ke-reports`.
 
 ### O que o pipeline faz
 
 1. Faz checkout do repositório
 2. Instala Node.js 20 e as dependências (`npm ci`)
-3. Instala o k6 via repositório oficial apt
-4. Executa os testes de performance: `k6 run --summary-export summary.json --out json=results.json main.js`
-5. Anexa os relatórios como artifact `relatorios-teste` (disponível na aba **Actions → [run] → Artifacts**)
+3. Instala o k6 via `grafana/setup-k6-action@v1.2.2`
+4. Executa os testes de performance com `grafana/run-k6-action@v1.5.0` e `K6_WEB_DASHBOARD=true`
+5. Anexa o relatório HTML como artifact `ke-reports` em `html-report.html` (disponível na aba **Actions → [run] → Artifacts**)
 
-### Relatórios gerados
+### Relatório gerado
 
 | Arquivo | Descrição |
 |---------|-----------|
-| `results.json` | Relatório detalhado em JSON (todos os dados brutos da execução) |
-| `summary.json` | Resumo agregado das métricas do k6 |
+| `html-report.html` | Dashboard HTML interativo do k6 (web dashboard) |
 
-Ambos estão no `.gitignore` e não são commitados — são gerados a cada run do CI e disponibilizados como artifact para download.
+O arquivo está no `.gitignore` e não é commitado — é gerado a cada run do CI e disponibilizado como artifact para download.
 
-### Executar localmente com relatórios
-
-Via Docker (imagem oficial `grafana/k6`):
+### Executar localmente com relatório HTML
 
 ```bash
-docker run --rm \
-  -v "$(pwd):/src" \
-  -w /src \
-  grafana/k6:latest \
-  run --summary-export summary.json --out json=results.json main.js
+K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=html-report.html k6 run --summary-mode=full main.js
 ```
 
-Ou com k6 instalado localmente:
-
 ```bash
-k6 run --summary-export summary.json --out json=results.json main.js
+npm run test-report
 ```
 
 ## Asserções
